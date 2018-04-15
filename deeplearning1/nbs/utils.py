@@ -1,8 +1,13 @@
 from __future__ import division,print_function
 import math, os, json, sys, re
+# set THEANO FLAGs - must be done before "import theano"
+# alternative is to set it in the conda env start
+# https://stackoverflow.com/questions/44765376/valueerror-you-are-trying-to-use-the-old-gpu-back-end-when-importing-keras
+# https://stackoverflow.com/questions/31598963/how-to-set-specific-environment-variables-when-activating-conda-environment
+os.environ["THEANO_FLAGS"] = "mode=FAST_RUN,device=cuda,floatX=float16"
 
-# import cPickle as pickle  # Python 2
-import pickle  # Python3
+import cPickle as pickle  # Python 2
+# import pickle  # Python3
 
 from glob import glob
 import numpy as np

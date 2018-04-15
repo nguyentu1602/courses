@@ -11,9 +11,9 @@ from keras.layers.normalization import BatchNormalization
 from keras.utils.data_utils import get_file
 from keras.models import Sequential
 from keras.layers.core import Flatten, Dense, Dropout, Lambda
-from keras.layers.convolutional import Conv2D, MaxPooling2D, ZeroPadding2D  # Conv2D: Keras2
+from keras.layers.convolutional import Convolution2D, MaxPooling2D, ZeroPadding2D
 from keras.layers.pooling import GlobalAveragePooling2D
-from keras.optimizers import SGD, RMSprop, Adam
+from keras.optimizers import SGD, Adam
 from keras.preprocessing import image
 
 # In case we are going to use the TensorFlow backend we need to explicitly set the Theano image ordering
@@ -26,13 +26,13 @@ def vgg_preprocess(x):
     return x[:, ::-1] # reverse axis rgb->bgr
 
 
-class Vgg16():
-    """The VGG 16 Imagenet model"""
+class Vgg16BN():
+    """The VGG 16 Imagenet model with Batch Normalization for the Dense Layers"""
 
 
-    def __init__(self):
+    def __init__(self, size=(224,224), include_top=True):
         self.FILE_PATH = 'http://files.fast.ai/models/'
-        self.create()
+        self.create(size, include_top)
         self.get_classes()
 
 
@@ -55,19 +55,23 @@ class Vgg16():
         model = self.model
         for i in range(layers):
             model.add(ZeroPadding2D((1, 1)))
-            model.add(Conv2D(filters, kernel_size=(3, 3), activation='relu'))  # Keras2
+            model.add(Convolution2D(filters, 3, 3, activation='relu'))
         model.add(MaxPooling2D((2, 2), strides=(2, 2)))
 
 
     def FCBlock(self):
         model = self.model
         model.add(Dense(4096, activation='relu'))
+        model.add(BatchNormalization())
         model.add(Dropout(0.5))
 
 
-    def create(self):
+    def create(self, size, include_top):
+        if size != (224,224):
+            include_top=False
+
         model = self.model = Sequential()
-        model.add(Lambda(vgg_preprocess, input_shape=(3,224,224), output_shape=(3,224,224)))
+        model.add(Lambda(vgg_preprocess, input_shape=(3,)+size, output_shape=(3,)+size))
 
         self.ConvBlock(2, 64)
         self.ConvBlock(2, 128)
@@ -75,12 +79,17 @@ class Vgg16():
         self.ConvBlock(3, 512)
         self.ConvBlock(3, 512)
 
+        if not include_top:
+            fname = 'vgg16_bn_conv.h5'
+            model.load_weights(get_file(fname, self.FILE_PATH+fname, cache_subdir='models'))
+            return
+
         model.add(Flatten())
         self.FCBlock()
         self.FCBlock()
         model.add(Dense(1000, activation='softmax'))
 
-        fname = 'vgg16.h5'
+        fname = 'vgg16_bn.h5'
         model.load_weights(get_file(fname, self.FILE_PATH+fname, cache_subdir='models'))
 
 
@@ -97,7 +106,8 @@ class Vgg16():
         self.compile()
 
     def finetune(self, batches):
-        self.ft(batches.num_classes)  # Keras 2.1
+        self.ft(batches.nb_class)
+
         classes = list(iter(batches.class_indices))
         for c in batches.class_indices:
             classes[batches.class_indices[c]] = c
@@ -109,19 +119,17 @@ class Vgg16():
                 loss='categorical_crossentropy', metrics=['accuracy'])
 
 
-    # Keras2
     def fit_data(self, trn, labels,  val, val_labels,  nb_epoch=1, batch_size=64):
-        self.model.fit(trn, labels, epochs=nb_epoch,
+        self.model.fit(trn, labels, nb_epoch=nb_epoch,
                 validation_data=(val, val_labels), batch_size=batch_size)
 
 
-    # Keras2
-    def fit(self, batches, val_batches, batch_size, nb_epoch=1):
-        self.model.fit_generator(batches, steps_per_epoch=int(np.ceil(batches.samples/batch_size)), epochs=nb_epoch,
-                validation_data=val_batches, validation_steps=int(np.ceil(val_batches.samples/batch_size)))
+    def fit(self, batches, val_batches, nb_epoch=1):
+        self.model.fit_generator(batches, samples_per_epoch=batches.nb_sample, nb_epoch=nb_epoch,
+                validation_data=val_batches, nb_val_samples=val_batches.nb_sample)
 
-        
-    # Keras2
+
     def test(self, path, batch_size=8):
         test_batches = self.get_batches(path, shuffle=False, batch_size=batch_size, class_mode=None)
-        return test_batches, self.model.predict_generator(test_batches, int(np.ceil(test_batches.samples/batch_size)))
+        return test_batches, self.model.predict_generator(test_batches, test_batches.nb_sample)
+

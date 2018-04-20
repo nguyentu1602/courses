@@ -1,6 +1,3 @@
-import os
-os.environ["KERAS_BACKEND"] = "tensorflow"
-
 import math, keras, datetime, pandas as pd, numpy as np, keras.backend as K, threading, json, re, collections
 import tarfile, tensorflow as tf, matplotlib.pyplot as plt, xgboost, operator, random, pickle, glob, os, bcolz
 import shutil, sklearn, functools, itertools, scipy
@@ -14,9 +11,7 @@ from IPython.display import display, Audio
 from numpy.random import normal
 from gensim.models import word2vec
 from keras.preprocessing.text import Tokenizer
-#from nltk.tokenize import ToktokTokenizer, StanfordTokenizer  # - changed for compatibility with conda-installed nltk
-from nltk.tokenize import ToktokTokenizer  # - changed for compatibility with conda-installed nltk
-from nltk.tokenize.stanford import StanfordTokenizer  # - changed for compatibility with conda-installed nltk
+from nltk.tokenize import ToktokTokenizer, StanfordTokenizer
 from functools import reduce
 from itertools import chain
 
@@ -24,22 +19,18 @@ from tensorflow.python.framework import ops
 #from tensorflow.contrib import rnn, legacy_seq2seq as seq2seq
 
 from keras_tqdm import TQDMNotebookCallback
-#from keras import initializations  # Keras 1
+from keras import initializations
 from keras.applications.resnet50 import ResNet50, decode_predictions, conv_block, identity_block
 from keras.applications.vgg16 import VGG16
-from keras.preprocessing import image, sequence
+from keras.preprocessing import image
 from keras.preprocessing.sequence import pad_sequences
 from keras.models import Model, Sequential
 from keras.layers import *
-from keras.layers.core import *
-from keras.layers.merge import dot, add, concatenate  # Keras2
-from keras.optimizers import Adam, SGD, RMSprop
-from keras.regularizers import l2, l1 # keras2
+from keras.optimizers import Adam
+from keras.regularizers import l2
 from keras.utils.data_utils import get_file
-from keras.utils import np_utils
-from keras.utils.np_utils import to_categorical
-
 from keras.applications.imagenet_utils import decode_predictions, preprocess_input
+
 
 np.set_printoptions(threshold=50, edgeitems=20)
 def beep(): return Audio(filename='/home/jhoward/beep.mp3', autoplay=True)
@@ -98,6 +89,7 @@ def plot_multi(im, dim=(4,4), figsize=(6,6), **kwargs ):
         plt.axis('off')
     plt.tight_layout()
 
+
 def plot_train(hist):
     h = hist.history
     if 'acc' in h:
@@ -149,56 +141,4 @@ def insert_layer(model, new_layer, index):
         res.add(copied)
         copied.set_weights(layer.get_weights())
     return res
-
-# copied from utils.py
-to_bw = np.array([0.299, 0.587, 0.114])
-
-def gray(img):
-    if K.image_dim_ordering() == 'tf':
-        return np.rollaxis(img, 0, 1).dot(to_bw)
-    else:
-        return np.rollaxis(img, 0, 3).dot(to_bw)
-
-def to_plot(img):
-    if K.image_dim_ordering() == 'tf':
-        return np.rollaxis(img, 0, 1).astype(np.uint8)
-    else:
-        return np.rollaxis(img, 0, 3).astype(np.uint8)
-
-def plot(img):
-    plt.imshow(to_plot(img))
-
-
-def floor(x):
-    return int(math.floor(x))
-def ceil(x):
-    return int(math.ceil(x))
-
-def plots(ims, figsize=(12,6), rows=1, interp=False, titles=None):
-    if type(ims[0]) is np.ndarray:
-        ims = np.array(ims).astype(np.uint8)
-        if (ims.shape[-1] != 3):
-            ims = ims.transpose((0,2,3,1))
-    f = plt.figure(figsize=figsize)
-    for i in range(len(ims)):
-        sp = f.add_subplot(rows, len(ims)//rows, i+1)
-        sp.axis('Off')
-        if titles is not None:
-            sp.set_title(titles[i], fontsize=16)
-        plt.imshow(ims[i], interpolation=None if interp else 'none')
-
-
-def do_clip(arr, mx):
-    clipped = np.clip(arr, (1-mx)/1, mx)
-    return clipped/clipped.sum(axis=1)[:, np.newaxis]
-
-
-def get_batches(dirname, gen=image.ImageDataGenerator(), shuffle=True, batch_size=4, class_mode='categorical',
-                target_size=(224,224)):
-    return gen.flow_from_directory(dirname, target_size=target_size,
-            class_mode=class_mode, shuffle=shuffle, batch_size=batch_size)
-
-
-def onehot(x):
-    return to_categorical(x)
 

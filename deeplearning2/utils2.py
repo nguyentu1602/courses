@@ -1,3 +1,6 @@
+import os
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import math, keras, datetime, pandas as pd, numpy as np, keras.backend as K, threading, json, re, collections
 import tarfile, tensorflow as tf, matplotlib.pyplot as plt, xgboost, operator, random, pickle, glob, os, bcolz
 import shutil, sklearn, functools, itertools, scipy
@@ -11,7 +14,9 @@ from IPython.display import display, Audio
 from numpy.random import normal
 from gensim.models import word2vec
 from keras.preprocessing.text import Tokenizer
-from nltk.tokenize import ToktokTokenizer, StanfordTokenizer
+#from nltk.tokenize import ToktokTokenizer, StanfordTokenizer  # - changed for compatibility with conda-installed nltk
+from nltk.tokenize import ToktokTokenizer  # - changed for compatibility with conda-installed nltk
+from nltk.tokenize.stanford import StanfordTokenizer  # - changed for compatibility with conda-installed nltk
 from functools import reduce
 from itertools import chain
 
@@ -19,7 +24,7 @@ from tensorflow.python.framework import ops
 #from tensorflow.contrib import rnn, legacy_seq2seq as seq2seq
 
 from keras_tqdm import TQDMNotebookCallback
-from keras import initializations
+#from keras import initializations  # Keras 1
 from keras.applications.resnet50 import ResNet50, decode_predictions, conv_block, identity_block
 from keras.applications.vgg16 import VGG16
 from keras.preprocessing import image
@@ -88,7 +93,6 @@ def plot_multi(im, dim=(4,4), figsize=(6,6), **kwargs ):
         plt.imshow(img, **kwargs)
         plt.axis('off')
     plt.tight_layout()
-
 
 def plot_train(hist):
     h = hist.history

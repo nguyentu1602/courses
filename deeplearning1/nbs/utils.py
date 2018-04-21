@@ -4,8 +4,8 @@ import math, os, json, sys, re
 # alternative is to set it in the conda env start
 # https://stackoverflow.com/questions/44765376/valueerror-you-are-trying-to-use-the-old-gpu-back-end-when-importing-keras
 # https://stackoverflow.com/questions/31598963/how-to-set-specific-environment-variables-when-activating-conda-environment
-# os.environ["THEANO_FLAGS"] = "mode=FAST_RUN,device=cuda,floatX=float16"
-os.environ["THEANO_FLAGS"] = "mode=FAST_RUN,device=cuda,floatX=float32"
+os.environ["THEANO_FLAGS"] = "mode=FAST_RUN,device=cuda,floatX=float16"
+# os.environ["THEANO_FLAGS"] = "mode=FAST_RUN,device=cuda,floatX=float32"
 
 import cPickle as pickle  # Python 2
 # import pickle  # Python3
@@ -98,6 +98,19 @@ def plots(ims, figsize=(12,6), rows=1, interp=False, titles=None):
         ims = np.array(ims).astype(np.uint8)
         if (ims.shape[-1] != 3):
             ims = ims.transpose((0,2,3,1))
+    f = plt.figure(figsize=figsize)
+    for i in range(len(ims)):
+        sp = f.add_subplot(rows, len(ims)//rows, i+1)
+        sp.axis('Off')
+        if titles is not None:
+            sp.set_title(titles[i], fontsize=16)
+        plt.imshow(ims[i], interpolation=None if interp else 'none')
+        
+
+def plots_gray(ims, figsize=(12,6), rows=1, interp=False, titles=None):
+    """No need for swapping dimensions here"""
+    if type(ims[0]) is np.ndarray:
+        ims = np.array(ims).astype(np.uint8)
     f = plt.figure(figsize=figsize)
     for i in range(len(ims)):
         sp = f.add_subplot(rows, len(ims)//rows, i+1)

@@ -173,7 +173,8 @@ def adjust_dropout(weights, prev_p, new_p):
 
 def get_data(path, target_size=(224,224)):
     batches = get_batches(path, shuffle=False, batch_size=1, class_mode=None, target_size=target_size)
-    return np.concatenate([batches.next() for i in range(batches.samples)])  # Keras2
+    # not sure to use xrange or range here - xrange is an iterator so that should be faster?
+    return np.concatenate([batches.next() for i in xrange(batches.samples)])  # Keras2
 
 
 def plot_confusion_matrix(cm, classes, normalize=False, title='Confusion matrix', cmap=plt.cm.Blues):
@@ -258,6 +259,9 @@ def get_classes(path):
 
 
 def split_at(model, layer_type):
+    """ Given a model and a model type, such as Convolution2D, first find the last layer of that type
+        and then split the layers into 2 sets. Return the layers objects.
+    """
     layers = model.layers
     layer_idx = [index for index,layer in enumerate(layers)
                  if type(layer) is layer_type][-1]

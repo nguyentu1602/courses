@@ -39,9 +39,10 @@ class Vgg16():
     """The VGG 16 Imagenet model"""
 
 
-    def __init__(self):
+    def __init__(self, size=(224,224)):
+        """default the input layer to 224 by 224"""
         self.FILE_PATH = 'http://files.fast.ai/models/'
-        self.create()
+        self.create(size)
         self.get_classes()
 
 
@@ -111,7 +112,7 @@ class Vgg16():
         model.add(Dropout(0.5))
 
 
-    def create(self):
+    def create(self, size):
         """
             Creates the VGG16 network achitecture and loads the pretrained weights.
             You can modify input shape, and pop the last layer to change the number of classes.
@@ -128,11 +129,18 @@ class Vgg16():
         self.ConvBlock(3, 512)
         self.ConvBlock(3, 512)
 
+        # flexibly deal with different input dimension here:
+        # Lecture 7, 1:02:00, version 1 of the course
+        if size != (224, 224):
+            fname = 'vgg16_bn_conv.h5'
+            model.load_weights(get_file(fname, self.FILE_PATH+fname, cache_subdir='models'))
+            return
+        
         model.add(Flatten())
         self.FCBlock()
         self.FCBlock()
         model.add(Dense(1000, activation='softmax'))
-
+        
         fname = 'vgg16.h5'
         model.load_weights(get_file(fname, self.FILE_PATH+fname, cache_subdir='models'))
 

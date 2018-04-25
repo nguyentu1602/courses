@@ -7,7 +7,7 @@ export region=$(aws configure get region)
 if [ $region = "us-west-2" ]; then
    export ami="ami-bc508adc" # Oregon
 elif [ $region = "eu-west-1" ]; then
-   export ami="ami-75fbdd0c" # Ireland - my own AMI. THe old one:  # export ami="ami-b43d1ec7" # Ireland
+   export ami="ami-28aa8751" # "ami-75fbdd0c" # Ireland - my own AMI
 elif [ $region = "us-east-1" ]; then
   export ami="ami-31ecfb26" # Virginia
 else
